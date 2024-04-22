@@ -101,8 +101,8 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
       floatingActionButton: Stack(
         children: [
           Positioned(
-            right: 20,
-            bottom: TRAINING_BOTTOM_MARGIN,
+            right: 15,
+            bottom: deviceHeight - 110,
             child: _floatingActionButton(),
           )
         ],
@@ -137,14 +137,15 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
 
   Widget _floatingActionButton() {
     return SizedBox(
-        height: 70.0,
-        width: 70.0,
-        child: FloatingActionButton(
+        height: 50.0,
+        width: 50.0,
+        child: FloatingActionButton.small(
+          backgroundColor: Colors.lightBlue,
           child: Icon(
             Platform.isIOS
                 ? Icons.flip_camera_ios_outlined
                 : Icons.flip_camera_android_outlined,
-            size: 40,
+            size: 30,
           ),
           onPressed: _switchLiveCamera,
         ));
