@@ -1,0 +1,1 @@
+const double TRAINING_BOTTOM_MARGIN = 150.0;

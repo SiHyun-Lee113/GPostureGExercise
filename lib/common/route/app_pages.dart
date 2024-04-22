@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:good_posture_good_exercise/common/view/home_screen.dart';
 import 'package:good_posture_good_exercise/schedule/view/schedule_screen.dart';
+import 'package:good_posture_good_exercise/training/bindings/camera_binding.dart';
 import 'package:good_posture_good_exercise/training/view/training_screen.dart';
 
 part 'app_routes.dart';
@@ -18,6 +19,7 @@ class AppPages {
     GetPage(
       name: _Paths.TRAINING,
       page: () => const TrainingScreen(),
+      binding: CameraBinding(),
     ),
     GetPage(
       name: _Paths.SCHEDULE,
