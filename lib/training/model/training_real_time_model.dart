@@ -1,4 +1,3 @@
-import 'package:good_posture_good_exercise/dev_utils/logger.dart';
 import 'package:good_posture_good_exercise/training/model/coordinate.dart';
 import 'package:good_posture_good_exercise/training/model/training_reference_model.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -52,10 +51,6 @@ class TrainingRealTimeModel {
     Coordinate leftElbow = calAverage(this.leftElbow);
     Coordinate rightElbow = calAverage(this.rightElbow);
 
-    siHyunLogger(TrainingReferenceModel(leftHand, rightHand, leftShoulder,
-            rightShoulder, leftElbow, rightElbow)
-        .toString());
-
     return TrainingReferenceModel(leftHand, rightHand, leftShoulder,
         rightShoulder, leftElbow, rightElbow);
   }
@@ -73,5 +68,67 @@ class TrainingRealTimeModel {
     avgY = avgY / coordinates.length;
 
     return Coordinate(avgX, avgY);
+  }
+
+  Coordinate calXHighRow(List<Coordinate> coordinates) {
+    double highX = 0.0;
+    double rowX = 0.0;
+
+    coordinates.sort(xComparator);
+
+    int tenPercentIndex = (coordinates.length * 0.1).round();
+
+    List<Coordinate> topTen =
+        coordinates.sublist(coordinates.length - tenPercentIndex);
+    List<Coordinate> bottomTen = coordinates.sublist(0, tenPercentIndex);
+
+    var forHighX = calAverage(topTen);
+    var forRowX = calAverage(bottomTen);
+
+    highX = forHighX.x;
+    rowX = forRowX.x;
+
+    return Coordinate(highX, rowX);
+  }
+
+  Coordinate calYHighRow(List<Coordinate> coordinates) {
+    double highY = 0.0;
+    double rowY = 0.0;
+
+    coordinates.sort(yComparator);
+
+    int tenPercentIndex = (coordinates.length * 0.1).round();
+
+    List<Coordinate> topTen =
+        coordinates.sublist(coordinates.length - tenPercentIndex);
+    List<Coordinate> bottomTen = coordinates.sublist(0, tenPercentIndex);
+
+    var forHighY = calAverage(topTen);
+    var forRowY = calAverage(bottomTen);
+
+    highY = forHighY.y;
+    rowY = forRowY.y;
+
+    return Coordinate(highY, rowY);
+  }
+
+  int xComparator(Coordinate pre, Coordinate next) {
+    if (pre.x < next.x) {
+      return -1;
+    } else if (pre.x > next.x) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  int yComparator(Coordinate pre, Coordinate next) {
+    if (pre.y < next.y) {
+      return -1;
+    } else if (pre.y > next.y) {
+      return 1;
+    } else {
+      return 0;
+    }
   }
 }

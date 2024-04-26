@@ -12,21 +12,23 @@ import 'package:image_picker/image_picker.dart';
 enum ScreenMode { liveFeed, gallery }
 
 class PoseDetectorWidget extends StatefulWidget {
-  PoseDetectorWidget(
-      {Key? key,
-      required this.title,
-      required this.customPaint,
-      this.text,
-      required this.onImage,
-      this.onScreenModeChanged,
-      this.initialDirection = CameraLensDirection.front})
-      : super(key: key);
+  PoseDetectorWidget({
+    Key? key,
+    required this.title,
+    required this.customPaint,
+    this.text,
+    required this.onImage,
+    required this.onEnd,
+    this.onScreenModeChanged,
+    this.initialDirection = CameraLensDirection.front,
+  }) : super(key: key);
 
   final String title;
   final CustomPaint? customPaint;
   final String? text;
   // google mlkit
   final Function(InputImage inputImage) onImage;
+  final Function() onEnd;
   final Function(ScreenMode mode)? onScreenModeChanged;
   final CameraLensDirection initialDirection;
 
@@ -127,7 +129,9 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
               backgroundColor: PRIMARY_COLOR,
               minimumSize: const Size.fromHeight(40),
             ),
-            onPressed: () {},
+            onPressed: () {
+              widget.onEnd();
+            },
             child: Text('그만하기'),
           ),
         ],

@@ -7,7 +7,7 @@ import 'package:good_posture_good_exercise/training/model/training_reference_mod
 import 'package:good_posture_good_exercise/training/module/pose_detector/pose_painter.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
-class CameraController extends GetxController {
+class PoseController extends GetxController {
   final PoseDetector _poseDetector =
       PoseDetector(options: PoseDetectorOptions());
 
@@ -66,9 +66,15 @@ class CameraController extends GetxController {
 
   void checkVertical() {}
 
-  TrainingReferenceModel addCoordinate(List<Pose> poses) {
-    siHyunLogger(poses.length.toString());
+  void printHigh() {
+    Get.back();
+    var calXHighRow = trRealTimeModel.calXHighRow(trRealTimeModel.rightHand);
+    siHyunLogger("high x : ${calXHighRow.x}, row x : ${calXHighRow.y}");
+    var calYHighRow = trRealTimeModel.calYHighRow(trRealTimeModel.rightHand);
+    siHyunLogger("high y : ${calXHighRow.y}, row y : ${calXHighRow.y}");
+  }
 
+  TrainingReferenceModel addCoordinate(List<Pose> poses) {
     for (var pose in poses) {
       var leftHand = Coordinate(
           pose.landmarks[PoseLandmarkType.leftWrist]?.x ?? 0,
