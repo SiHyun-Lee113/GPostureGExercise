@@ -19,6 +19,7 @@ class TrainingScreen extends GetView<PoseController> {
             title: '',
             customPaint: controller.customPaint,
             text: controller.text,
+            count: controller.count,
             onImage: (inputImage) {
               controller.processImage(inputImage);
             },

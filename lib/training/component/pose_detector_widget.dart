@@ -17,6 +17,7 @@ class PoseDetectorWidget extends StatefulWidget {
     required this.title,
     required this.customPaint,
     this.text,
+    required this.count,
     required this.onImage,
     required this.onEnd,
     this.onScreenModeChanged,
@@ -26,6 +27,7 @@ class PoseDetectorWidget extends StatefulWidget {
   final String title;
   final CustomPaint? customPaint;
   final String? text;
+  final int count;
   // google mlkit
   final Function(InputImage inputImage) onImage;
   final Function() onEnd;
@@ -120,9 +122,7 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('운동 정보'),
-            ],
+            children: [Text('운동 정보'), Text('운동 개수 ${widget.count}')],
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -266,21 +266,6 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
     final pickedFile = await _imagePicker?.pickImage(source: source);
     if (pickedFile != null) {
       _processPickedFile(pickedFile);
-    }
-    setState(() {});
-  }
-
-  void _switchScreenMode() {
-    _image = null;
-    if (_mode == ScreenMode.liveFeed) {
-      _mode = ScreenMode.gallery;
-      _stopLiveFeed();
-    } else {
-      _mode = ScreenMode.liveFeed;
-      _startLiveFeed();
-    }
-    if (widget.onScreenModeChanged != null) {
-      widget.onScreenModeChanged!(_mode);
     }
     setState(() {});
   }

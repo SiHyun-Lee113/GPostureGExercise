@@ -15,7 +15,10 @@ class PoseController extends GetxController {
   bool _isBusy = false;
   CustomPaint? customPaint;
   String? text;
+  int count = 0;
+
   TrainingRealTimeModel trRealTimeModel = TrainingRealTimeModel();
+  bool trainingFlag = false;
 
   @override
   void onInit() {
@@ -44,8 +47,10 @@ class PoseController extends GetxController {
     late TrainingReferenceModel trainingReferenceModel;
 
     if (poses.isNotEmpty) {
-      trainingReferenceModel = addCoordinate(poses);
+      trainingReferenceModel = await addCoordinate(poses);
     }
+
+    countingTraining(poses);
 
     if (inputImage.inputImageData?.size != null &&
         inputImage.inputImageData?.imageRotation != null) {
@@ -66,15 +71,73 @@ class PoseController extends GetxController {
 
   void checkVertical() {}
 
-  void printHigh() {
-    Get.back();
-    var calXHighRow = trRealTimeModel.calXHighRow(trRealTimeModel.rightHand);
-    siHyunLogger("high x : ${calXHighRow.x}, row x : ${calXHighRow.y}");
-    var calYHighRow = trRealTimeModel.calYHighRow(trRealTimeModel.rightHand);
-    siHyunLogger("high y : ${calXHighRow.y}, row y : ${calXHighRow.y}");
+  bool downFlag = false;
+  bool upFlag = true;
+
+  void countingTraining(List<Pose> poses) {
+    late int yHighLeft;
+    late int yRowLeft;
+    late int yHighRight;
+    late int yRowRight;
+    try {
+      var leftHandHR = trRealTimeModel.calYHighRow(trRealTimeModel.leftHand);
+      yHighLeft = leftHandHR.y.ceil();
+      yRowLeft = leftHandHR.x.ceil();
+      var rightHandHR = trRealTimeModel.calYHighRow(trRealTimeModel.rightHand);
+      yHighRight = rightHandHR.y.ceil();
+      yRowRight = rightHandHR.x.ceil();
+    } catch (e) {
+      return;
+    }
+    int leftY = poses[poses.length - 1]
+            .landmarks[PoseLandmarkType.leftWrist]
+            ?.y
+            .ceil() ??
+        0;
+    int rightY = poses[poses.length - 1]
+            .landmarks[PoseLandmarkType.rightWrist]
+            ?.y
+            .ceil() ??
+        0;
+
+    if (downFlag) {
+      if (leftY > yHighLeft && rightY > yHighRight) {
+        upFlag = true;
+        siHyunLogger("올라가유~~ 최댓값 : $yHighLeft, $yHighRight}");
+        siHyunLogger("올라가는 주우우웅 $leftY, $rightY}");
+      }
+    }
+
+    if (upFlag) {
+      siHyunLogger("내려가유~~ 최솟값 : $yRowLeft, $yRowRight}");
+      siHyunLogger("내려가는 주우우웅 $leftY, $rightY}");
+
+      if (leftY < yRowLeft && rightY < yRowRight) {
+        downFlag = true;
+        siHyunLogger("내려가유~~ 최솟값 : $yRowLeft, $yRowRight}");
+        siHyunLogger("내려가는 주우우웅 $leftY}");
+        upFlag = false;
+      }
+    }
+
+    if (downFlag && upFlag) {
+      count++;
+      downFlag = false;
+    }
   }
 
-  TrainingReferenceModel addCoordinate(List<Pose> poses) {
+  void printHigh() {
+    Get.back();
+    var calXHighRow = trRealTimeModel.calXHighRow(trRealTimeModel.leftHand);
+    siHyunLogger("high x : ${calXHighRow.x}, row x : ${calXHighRow.y}");
+    var calYHighRow = trRealTimeModel.calYHighRow(trRealTimeModel.leftHand);
+    siHyunLogger("high y : ${calYHighRow.x}, row y : ${calYHighRow.y}");
+    var length2 = trRealTimeModel.rightHand.length;
+
+    siHyunLogger("아ㅏ아아아아아아ㅏㅇ나아앙$length2");
+  }
+
+  Future<TrainingReferenceModel> addCoordinate(List<Pose> poses) async {
     for (var pose in poses) {
       var leftHand = Coordinate(
           pose.landmarks[PoseLandmarkType.leftWrist]?.x ?? 0,
