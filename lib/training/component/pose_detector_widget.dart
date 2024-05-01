@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +5,6 @@ import 'package:good_posture_good_exercise/common/const/constant.dart';
 import 'package:good_posture_good_exercise/common/const/style.dart';
 import 'package:good_posture_good_exercise/main.dart';
 import 'package:google_mlkit_commons/google_mlkit_commons.dart';
-import 'package:image_picker/image_picker.dart';
 
 enum ScreenMode { liveFeed, gallery }
 
@@ -23,6 +20,7 @@ class PoseDetectorWidget extends StatefulWidget {
     required this.onEnd,
     this.onScreenModeChanged,
     this.initialDirection = CameraLensDirection.front,
+    required this.checkBalance,
   }) : super(key: key);
 
   final String title;
@@ -33,6 +31,7 @@ class PoseDetectorWidget extends StatefulWidget {
   final Function(InputImage inputImage) onImage;
   final Function() onStart;
   final Function() onEnd;
+  final Function() checkBalance;
   final Function(ScreenMode mode)? onScreenModeChanged;
   final CameraLensDirection initialDirection;
 
@@ -41,11 +40,7 @@ class PoseDetectorWidget extends StatefulWidget {
 }
 
 class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
-  ScreenMode _mode = ScreenMode.liveFeed;
   CameraController? _controller;
-  File? _image;
-  String? _path;
-  ImagePicker? _imagePicker;
   num _cameraIndex = 0;
   double zoomLevel = 0.0, minZoomLevel = 0.0, maxZoomLevel = 0.0;
   bool _changingCameraLens = false;
@@ -55,8 +50,6 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
     super.initState();
 
     _controller = CameraController(cameras[0], ResolutionPreset.max);
-
-    _imagePicker = ImagePicker();
 
     if (cameras.any(
       (element) =>
@@ -87,13 +80,15 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
 
   @override
   Widget build(BuildContext context) {
+    _checkBalance();
+
     double deviceHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: null,
       body: Column(
         children: [
           Expanded(
-            child: _body(),
+            child: _liveFeedBody(),
           ),
           SizedBox(
             height: 32,
@@ -104,16 +99,16 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
           ),
         ],
       ),
-      floatingActionButton: Stack(
-        children: [
-          Positioned(
-            right: 15,
-            bottom: deviceHeight - 110,
-            child: _floatingActionButton(),
-          )
-        ],
-      ),
     );
+  }
+
+  bool checkFlag = false;
+
+  void _checkBalance() {
+    while (checkFlag) {
+      Future.delayed(const Duration(milliseconds: 500));
+      widget.checkBalance;
+    }
   }
 
   _renderFooter() {
@@ -143,38 +138,15 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
             ),
             onPressed: () {
               widget.onStart();
+              // setState(() {
+              //   checkFlag = !checkFlag;
+              // });
             },
             child: Text('시작하기'),
           ),
         ],
       ),
     );
-  }
-
-  Widget _floatingActionButton() {
-    return SizedBox(
-        height: 50.0,
-        width: 50.0,
-        child: FloatingActionButton.small(
-          backgroundColor: Colors.lightBlue,
-          child: Icon(
-            Platform.isIOS
-                ? Icons.flip_camera_ios_outlined
-                : Icons.flip_camera_android_outlined,
-            size: 30,
-          ),
-          onPressed: _switchLiveCamera,
-        ));
-  }
-
-  Widget _body() {
-    Widget body;
-    if (_mode == ScreenMode.liveFeed) {
-      body = _liveFeedBody();
-    } else {
-      body = _galleryBody();
-    }
-    return body;
   }
 
   Widget _liveFeedBody() {
@@ -229,59 +201,6 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
     );
   }
 
-  Widget _galleryBody() {
-    return ListView(shrinkWrap: true, children: [
-      _image != null
-          ? SizedBox(
-              height: 400,
-              width: 400,
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  Image.file(_image!),
-                  if (widget.customPaint != null) widget.customPaint!,
-                ],
-              ),
-            )
-          : Icon(
-              Icons.image,
-              size: 200,
-            ),
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: Text('From Gallery'),
-          onPressed: () => _getImage(ImageSource.gallery),
-        ),
-      ),
-      Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton(
-          child: Text('Take a picture'),
-          onPressed: () => _getImage(ImageSource.camera),
-        ),
-      ),
-      if (_image != null)
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-              '${_path == null ? '' : 'Image path: $_path'}\n\n${widget.text ?? ''}'),
-        ),
-    ]);
-  }
-
-  Future _getImage(ImageSource source) async {
-    setState(() {
-      _image = null;
-      _path = null;
-    });
-    final pickedFile = await _imagePicker?.pickImage(source: source);
-    if (pickedFile != null) {
-      _processPickedFile(pickedFile);
-    }
-    setState(() {});
-  }
-
   Future _startLiveFeed() async {
     var cameras = await availableCameras();
     final camera = cameras[_cameraIndex.toInt()];
@@ -310,30 +229,6 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
     await _controller?.stopImageStream();
     await _controller?.dispose();
     _controller = null;
-  }
-
-  Future _switchLiveCamera() async {
-    setState(() => _changingCameraLens = true);
-    _cameraIndex = (_cameraIndex + 1) % cameras.length;
-
-    await _stopLiveFeed();
-    await _startLiveFeed();
-    setState(() => _changingCameraLens = false);
-  }
-
-  Future _processPickedFile(XFile? pickedFile) async {
-    final path = pickedFile?.path;
-    if (path == null) {
-      return;
-    }
-    setState(() {
-      _image = File(path);
-    });
-    _path = path;
-
-    // google mlkit
-    final inputImage = InputImage.fromFilePath(path);
-    widget.onImage(inputImage);
   }
 
   Future _processCameraImage(CameraImage image) async {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -17,6 +19,7 @@ class PoseController extends GetxController {
   CustomPaint? customPaint;
   String? text;
   int count = 0;
+  bool _soundPlay = false;
 
   TrainingRealTimeModel trRealTimeModel = TrainingRealTimeModel();
 
@@ -31,6 +34,8 @@ class PoseController extends GetxController {
       autoStart: false,
       showNotification: false,
     );
+
+    checkHorizontal();
   }
 
   @override
@@ -44,8 +49,6 @@ class PoseController extends GetxController {
     _poseDetector.close();
     super.onClose();
   }
-
-  bool _soundPlay = false;
 
   void soundStart() {
     if (!_soundPlay) {
@@ -90,7 +93,11 @@ class PoseController extends GetxController {
     update();
   }
 
-  void checkHorizontal(List<Pose> poses) {}
+  int test = 0;
+
+  void checkHorizontal() async {
+    print('PoseController.checkHorizontal');
+  }
 
   void checkVertical() {}
 

@@ -18,7 +18,7 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.TRAINING,
-      page: () => const TrainingScreen(),
+      page: () => TrainingScreen(),
       binding: CameraBinding(),
     ),
     GetPage(
