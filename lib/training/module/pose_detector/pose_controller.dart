@@ -1,3 +1,4 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:good_posture_good_exercise/dev_utils/logger.dart';
@@ -18,11 +19,18 @@ class PoseController extends GetxController {
   int count = 0;
 
   TrainingRealTimeModel trRealTimeModel = TrainingRealTimeModel();
-  bool trainingFlag = false;
+
+  late final AssetsAudioPlayer _player = AssetsAudioPlayer.newPlayer();
 
   @override
   void onInit() {
     super.onInit();
+    _player.open(
+      Audio("assets/sound/training_count_sound_ten.mp3"),
+      loopMode: LoopMode.single,
+      autoStart: false,
+      showNotification: false,
+    );
   }
 
   @override
@@ -35,6 +43,19 @@ class PoseController extends GetxController {
     _canProcess = false;
     _poseDetector.close();
     super.onClose();
+  }
+
+  bool _soundPlay = false;
+
+  void soundStart() {
+    if (!_soundPlay) {
+      _player.play();
+      _soundPlay = true;
+    } else {
+      _player.stop();
+      _player.dispose();
+      _soundPlay = false;
+    }
   }
 
   Future<void> processImage(InputImage inputImage) async {
@@ -50,17 +71,19 @@ class PoseController extends GetxController {
       trainingReferenceModel = await addCoordinate(poses);
     }
 
-    countingTraining(poses);
-
-    if (inputImage.inputImageData?.size != null &&
-        inputImage.inputImageData?.imageRotation != null) {
-      final painter = PosePainter(poses, inputImage.inputImageData!.size,
-          inputImage.inputImageData!.imageRotation, trainingReferenceModel);
-      customPaint = CustomPaint(painter: painter);
-    } else {
-      text = 'Poses found: ${poses.length}\n\n';
-      // TODO: set _customPaint to draw landmarks on top of image
-      customPaint = null;
+    try {
+      if (inputImage.inputImageData?.size != null &&
+          inputImage.inputImageData?.imageRotation != null) {
+        final painter = PosePainter(poses, inputImage.inputImageData!.size,
+            inputImage.inputImageData!.imageRotation, trainingReferenceModel);
+        customPaint = CustomPaint(painter: painter);
+      } else {
+        text = 'Poses found: ${poses.length}\n\n';
+        // TODO: set _customPaint to draw landmarks on top of image
+        customPaint = null;
+      }
+    } catch (e) {
+      return;
     }
 
     _isBusy = false;
@@ -71,61 +94,6 @@ class PoseController extends GetxController {
 
   void checkVertical() {}
 
-  bool downFlag = false;
-  bool upFlag = true;
-
-  void countingTraining(List<Pose> poses) {
-    late int yHighLeft;
-    late int yRowLeft;
-    late int yHighRight;
-    late int yRowRight;
-    try {
-      var leftHandHR = trRealTimeModel.calYHighRow(trRealTimeModel.leftHand);
-      yHighLeft = leftHandHR.y.ceil();
-      yRowLeft = leftHandHR.x.ceil();
-      var rightHandHR = trRealTimeModel.calYHighRow(trRealTimeModel.rightHand);
-      yHighRight = rightHandHR.y.ceil();
-      yRowRight = rightHandHR.x.ceil();
-    } catch (e) {
-      return;
-    }
-    int leftY = poses[poses.length - 1]
-            .landmarks[PoseLandmarkType.leftWrist]
-            ?.y
-            .ceil() ??
-        0;
-    int rightY = poses[poses.length - 1]
-            .landmarks[PoseLandmarkType.rightWrist]
-            ?.y
-            .ceil() ??
-        0;
-
-    if (downFlag) {
-      if (leftY > yHighLeft && rightY > yHighRight) {
-        upFlag = true;
-        siHyunLogger("올라가유~~ 최댓값 : $yHighLeft, $yHighRight}");
-        siHyunLogger("올라가는 주우우웅 $leftY, $rightY}");
-      }
-    }
-
-    if (upFlag) {
-      siHyunLogger("내려가유~~ 최솟값 : $yRowLeft, $yRowRight}");
-      siHyunLogger("내려가는 주우우웅 $leftY, $rightY}");
-
-      if (leftY < yRowLeft && rightY < yRowRight) {
-        downFlag = true;
-        siHyunLogger("내려가유~~ 최솟값 : $yRowLeft, $yRowRight}");
-        siHyunLogger("내려가는 주우우웅 $leftY}");
-        upFlag = false;
-      }
-    }
-
-    if (downFlag && upFlag) {
-      count++;
-      downFlag = false;
-    }
-  }
-
   void printHigh() {
     Get.back();
     var calXHighRow = trRealTimeModel.calXHighRow(trRealTimeModel.leftHand);
@@ -133,8 +101,6 @@ class PoseController extends GetxController {
     var calYHighRow = trRealTimeModel.calYHighRow(trRealTimeModel.leftHand);
     siHyunLogger("high y : ${calYHighRow.x}, row y : ${calYHighRow.y}");
     var length2 = trRealTimeModel.rightHand.length;
-
-    siHyunLogger("아ㅏ아아아아아아ㅏㅇ나아앙$length2");
   }
 
   Future<TrainingReferenceModel> addCoordinate(List<Pose> poses) async {

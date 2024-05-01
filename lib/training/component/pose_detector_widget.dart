@@ -19,6 +19,7 @@ class PoseDetectorWidget extends StatefulWidget {
     this.text,
     required this.count,
     required this.onImage,
+    required this.onStart,
     required this.onEnd,
     this.onScreenModeChanged,
     this.initialDirection = CameraLensDirection.front,
@@ -30,6 +31,7 @@ class PoseDetectorWidget extends StatefulWidget {
   final int count;
   // google mlkit
   final Function(InputImage inputImage) onImage;
+  final Function() onStart;
   final Function() onEnd;
   final Function(ScreenMode mode)? onScreenModeChanged;
   final CameraLensDirection initialDirection;
@@ -133,6 +135,16 @@ class _PoseDetectorWidgetState extends State<PoseDetectorWidget> {
               widget.onEnd();
             },
             child: Text('그만하기'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: PRIMARY_COLOR,
+              minimumSize: const Size.fromHeight(40),
+            ),
+            onPressed: () {
+              widget.onStart();
+            },
+            child: Text('시작하기'),
           ),
         ],
       ),

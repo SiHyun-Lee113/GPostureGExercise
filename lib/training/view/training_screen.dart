@@ -23,6 +23,9 @@ class TrainingScreen extends GetView<PoseController> {
             onImage: (inputImage) {
               controller.processImage(inputImage);
             },
+            onStart: () {
+              controller.soundStart();
+            },
             onEnd: () {
               controller.printHigh();
             },
